@@ -43,7 +43,7 @@ for i in range(len(data)):
         a = avg5.value()
         c = abs(d - a)
         if c > 0.2:
-            discontinuities.append(i)
+            discontinuities.append({"value": i, "before": data[i - 1], "after": data[i]})
             print("abnormal change found from %d to %d (%.6f to %.6f) avg %.6f change %.6f" % (i - 1, i, data[i - 1], d, a, c))            
             avg5 = MovingAvg(5)
         else:
@@ -51,14 +51,13 @@ for i in range(len(data)):
     else:
         avg5.add(d)
     
-avgLen = 20
-for d in discontinuities:
-    avg20 = MovingAvg(avgLen)
-    for i in range(d - (2 * avgLen), d + (2 * avgLen)):
-        avg20.add(data[i])
-        if i > (d - avgLen) and i < (d + avgLen):
-            f = (d - i) / (1.0 * avgLen)
-            data[i] = ((1.0 - abs(f)) * avg20.value()) + (abs(f) * data[i])
+avgLen = 50
+for disc in discontinuities:
+    d = disc["value"]
+    mid = (disc["after"] + disc["before"]) / 2.0
+    for i in range(d - avgLen, d + avgLen):
+        f = (d - i) / (1.0 * avgLen)
+        data[i] = ((1.0 - abs(f)) * mid) + (abs(f) * data[i])
 
 sf.write("./fixed.wav", data, samplerate)
 
